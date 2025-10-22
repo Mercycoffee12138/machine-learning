@@ -67,11 +67,25 @@ def ridge_fit_closed_form(X: np.ndarray, y: np.ndarray, lam: float) -> np.ndarra
 
 
 def main():
+    os.makedirs(OUT_DIR, exist_ok=True)
+    
+    # 读取数据集
+    print("正在读取红酒质量数据集...")
     df = pd.read_csv(CSV, sep=';')
+    print(f"数据集形状: {df.shape}")
+    print(f"特征列: {df.columns[:-1].tolist()}")
+    print(f"目标列: {df.columns[-1]}")
+    
     X = df.iloc[:, :-1].to_numpy().astype(float)
     y = df.iloc[:, -1].to_numpy().astype(float)
 
+    # 按4:1比例划分训练集和测试集
     X_train, y_train, X_test, y_test = train_test_split(X, y, test_ratio=0.2)
+    print(f"\n训练集样本数: {X_train.shape[0]}")
+    print(f"测试集样本数: {X_test.shape[0]}")
+    print(f"特征数: {X_train.shape[1]}")
+    
+    # 数据标准化
     X_train, X_test = normalize(X_train, X_test)
     print("数据标准化完成")
 

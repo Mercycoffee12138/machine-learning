@@ -27,12 +27,34 @@ def train_test_split_xy(x: np.ndarray, y: np.ndarray, test_ratio: float = 0.2):
 
 # ============================
 # TODO: 算法实现区域（学生填写）
-# 目标：实现正规方程，返回 w, b 使 y ≈ w x + b（单特征）
-# 提示：构造设计矩阵 Xb = [x, 1]，令 theta = (Xb^T Xb)^{-1} Xb^T y
-# def normal_equation_fit(x_train: np.ndarray, y_train: np.ndarray):
-#     # YOUR CODE HERE
-#     # return w, b
-#     raise NotImplementedError
+# 目标：实现正规方程,返回 w, b 使 y ≈ w x + b(单特征)
+# 提示:构造设计矩阵 Xb = [x, 1],令 theta = (Xb^T Xb)^{-1} Xb^T y
+def normal_equation_fit(x_train: np.ndarray, y_train: np.ndarray):
+    """
+    使用正规方程求解线性回归参数
+    参数:
+        x_train: 训练特征,形状为 (n_samples,)
+        y_train: 训练目标值,形状为 (n_samples,)
+    返回:
+        w: 斜率
+        b: 截距
+    """
+    # 将 x_train 转换为列向量
+    x_train = x_train.reshape(-1, 1)
+    
+    # 构造设计矩阵 Xb = [x, 1],添加偏置列
+    ones = np.ones((x_train.shape[0], 1))
+    Xb = np.hstack([x_train, ones])
+    
+    # 计算正规方程: theta = (Xb^T Xb)^{-1} Xb^T y
+    # theta = [w, b]^T
+    theta = np.linalg.inv(Xb.T @ Xb) @ Xb.T @ y_train
+    
+    # 提取参数
+    w = theta[0]
+    b = theta[1]
+    
+    return w, b
 # ============================
 
 
@@ -55,33 +77,33 @@ def main():
     print('Please implement normal_equation_fit(x_train, y_train) that returns w, b.')
 
     # 如已实现，可取消下方注释运行可视化与评估
-    # w, b = normal_equation_fit(x_train, y_train)
-    # y_train_pred = w * x_train + b
-    # y_test_pred = w * x_test + b
-    # train_mse = float(np.mean((y_train - y_train_pred) ** 2))
-    # test_mse = float(np.mean((y_test - y_test_pred) ** 2))
-    # print(f'Train MSE: {train_mse:.4f}\nTest MSE: {test_mse:.4f}')
+    w, b = normal_equation_fit(x_train, y_train)
+    y_train_pred = w * x_train + b
+    y_test_pred = w * x_test + b
+    train_mse = float(np.mean((y_train - y_train_pred) ** 2))
+    test_mse = float(np.mean((y_test - y_test_pred) ** 2))
+    print(f'Train MSE: {train_mse:.4f}\nTest MSE: {test_mse:.4f}')
     #
     # # 预测5个新样本
-    # x_new = np.array([-12, -3, 0, 4.5, 11])
-    # y_new_pred = w * x_new + b
-    # print('5 new predictions:')
-    # for xi, yi in zip(x_new, y_new_pred):
-    #     print(f'  x={xi:.2f} -> y_pred={yi:.3f}')
+    x_new = np.array([-12, -3, 0, 4.5, 11])
+    y_new_pred = w * x_new + b
+    print('5 new predictions:')
+    for xi, yi in zip(x_new, y_new_pred):
+        print(f'  x={xi:.2f} -> y_pred={yi:.3f}')
     #
     # # 作图（英文标签）
-    # plt.figure(figsize=(6, 4))
-    # plt.scatter(x_train, y_train, s=12, color='#1f77b4', label='Train data')
-    # xs = np.linspace(np.min(x_train), np.max(x_train), 200)
-    # ys = w * xs + b
-    # plt.plot(xs, ys, color='#d62728', label=f'Fit: y={w:.3f}x+{b:.3f}')
-    # plt.xlabel('x')
-    # plt.ylabel('y')
-    # plt.legend()
-    # plt.tight_layout()
-    # plt.savefig(FIG_PATH, dpi=150)
-    # plt.close()
-    # print('Saved figure:', FIG_PATH)
+    plt.figure(figsize=(6, 4))
+    plt.scatter(x_train, y_train, s=12, color='#1f77b4', label='Train data')
+    xs = np.linspace(np.min(x_train), np.max(x_train), 200)
+    ys = w * xs + b
+    plt.plot(xs, ys, color='#d62728', label=f'Fit: y={w:.3f}x+{b:.3f}')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(FIG_PATH, dpi=150)
+    plt.close()
+    print('Saved figure:', FIG_PATH)
 
 
 if __name__ == '__main__':

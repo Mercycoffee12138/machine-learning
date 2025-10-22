@@ -38,57 +38,10 @@ def mse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 # TODO: 算法实现区域（学生填写）
 # 目标：实现梯度下降训练线性回归，返回 (w, b, hist)
 # 建议：BGD 每轮使用全部样本；可扩展为小批量 SGD
-def gd_train(X: np.ndarray, y: np.ndarray, lr=0.01, epochs=200):
-    """
-    批量梯度下降训练线性回归模型
-    
-    参数:
-        X: 特征矩阵，形状为 (n_samples, n_features)
-        y: 目标值，形状为 (n_samples,)
-        lr: 学习率
-        epochs: 训练轮数
-    
-    返回:
-        w: 权重向量，形状为 (n_features,)
-        b: 偏置项
-        history_mse_list: 每轮训练后的MSE历史记录
-    """
-    n_samples, n_features = X.shape
-    
-    # 初始化参数
-    w = np.random.normal(0, 0.01, n_features)  # 权重初始化为小的随机值
-    b = 0.0  # 偏置初始化为0
-    
-    history_mse_list = []
-    
-    print(f"开始批量梯度下降训练，样本数：{n_samples}，特征数：{n_features}")
-    print(f"学习率：{lr}，训练轮数：{epochs}")
-    
-    for epoch in range(epochs):
-        # 前向传播：计算所有样本的预测值
-        y_pred = X @ w + b
-        
-        # 计算损失（均方误差）
-        mse = np.mean((y - y_pred) ** 2)
-        history_mse_list.append(mse)
-        
-        # 计算梯度（基于全部样本）
-        error = y_pred - y
-        
-        # 对权重w的梯度：∂L/∂w = (2/n) * X^T * error
-        # 对偏置b的梯度：∂L/∂b = (2/n) * sum(error)
-        dw = (2.0 / n_samples) * X.T @ error
-        db = (2.0 / n_samples) * np.sum(error)
-        
-        # 更新参数（批量梯度下降 - 使用全部样本的梯度）
-        w = w - lr * dw
-        b = b - lr * db
-        
-        # 打印训练进度
-        if (epoch + 1) % 50 == 0:
-            print(f"Epoch {epoch + 1}/{epochs}, MSE: {mse:.6f}")
-    
-    return w, b, history_mse_list
+# def gd_train(X: np.ndarray, y: np.ndarray, lr=0.01, epochs=200):
+#     # YOUR CODE HERE
+#     # return w, b, history_mse_list
+#     raise NotImplementedError
 # ============================
 
 
@@ -116,15 +69,15 @@ def main():
     #
     plt.figure(figsize=(7, 5))
     for lr, info in curves.items():
-        plt.plot(range(1, len(info['hist']) + 1), info['hist'], label=f'lr={lr}')
-    plt.xlabel('Epoch')
-    plt.ylabel('Train MSE')
-    plt.title('MSE convergence under different learning rates')
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(FIG_PATH, dpi=150)
-    plt.close()
-    print('Saved figure:', FIG_PATH)
+    #     plt.plot(range(1, len(info['hist']) + 1), info['hist'], label=f'lr={lr}')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Train MSE')
+    # plt.title('MSE convergence under different learning rates')
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.savefig(FIG_PATH, dpi=150)
+    # plt.close()
+    # print('Saved figure:', FIG_PATH)
 
 
 if __name__ == '__main__':

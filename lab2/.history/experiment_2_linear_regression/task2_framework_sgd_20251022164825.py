@@ -31,56 +31,64 @@ def normalize(X_train: np.ndarray, X_test: np.ndarray):
     return (X_train - mean) / std, (X_test - mean) / std
 
 # ============================
-# 批量梯度下降（BGD）算法实现
-def gd_train(X: np.ndarray, y: np.ndarray, lr=0.01, epochs=200):
+# TODO: 算法实现区域(学生填写)
+# 目标:实现 BGD 或 SGD 训练线性回归,返回 (w, b, hist)
+# 建议:BGD 每轮使用全部样本;SGD 可每次采样一个或小批量样本
+def gd_train(X: np.ndarray, y: np.ndarray, lr=0.001, epochs=200, batch_size=None):
     """
-    批量梯度下降训练线性回归模型
+    使用梯度下降训练线性回归模型
     
     参数:
-        X: 特征矩阵，形状为 (n_samples, n_features)
-        y: 目标值，形状为 (n_samples,)
+        X: 训练特征矩阵 (n_samples, n_features)
+        y: 训练标签 (n_samples,)
         lr: 学习率
         epochs: 训练轮数
+        batch_size: 批量大小。None表示BGD(使用全部样本),1表示SGD,其他值表示Mini-batch GD
     
     返回:
-        w: 权重向量，形状为 (n_features,)
+        w: 权重向量
         b: 偏置项
-        history_mse_list: 每轮训练后的MSE历史记录
+        history_mse_list: 每个epoch的MSE历史记录
     """
     n_samples, n_features = X.shape
     
     # 初始化参数
-    w = np.random.normal(0, 0.01, n_features)  # 权重初始化为小的随机值
-    b = 0.0  # 偏置初始化为0
+    w = np.zeros(n_features)
+    b = 0.0
     
     history_mse_list = []
     
-    print(f"开始批量梯度下降训练，样本数：{n_samples}，特征数：{n_features}")
-    print(f"学习率：{lr}，训练轮数：{epochs}")
+    # 如果batch_size为None,使用BGD(全部样本)
+    if batch_size is None:
+        batch_size = n_samples
     
     for epoch in range(epochs):
-        # 前向传播：计算所有样本的预测值
-        y_pred = X @ w + b
+        # 打乱数据索引(用于SGD和Mini-batch GD)
+        indices = np.random.permutation(n_samples)
         
-        # 计算损失（均方误差）
-        mse = np.mean((y - y_pred) ** 2)
+        # 按批次训练
+        for i in range(0, n_samples, batch_size):
+            # 获取当前批次的索引
+            batch_indices = indices[i:min(i + batch_size, n_samples)]
+            X_batch = X[batch_indices]
+            y_batch = y[batch_indices]
+            
+            # 前向传播:计算预测值
+            y_pred = X_batch @ w + b
+            
+            # 计算梯度
+            error = y_pred - y_batch
+            dw = (2 / len(batch_indices)) * (X_batch.T @ error)
+            db = (2 / len(batch_indices)) * np.sum(error)
+            
+            # 更新参数
+            w -= lr * dw
+            b -= lr * db
+        
+        # 计算整个训练集的MSE(用于监控收敛)
+        y_train_pred = X @ w + b
+        mse = float(np.mean((y - y_train_pred) ** 2))
         history_mse_list.append(mse)
-        
-        # 计算梯度（基于全部样本）
-        error = y_pred - y
-        
-        # 对权重w的梯度：∂L/∂w = (2/n) * X^T * error
-        # 对偏置b的梯度：∂L/∂b = (2/n) * sum(error)
-        dw = (2.0 / n_samples) * X.T @ error
-        db = (2.0 / n_samples) * np.sum(error)
-        
-        # 更新参数（批量梯度下降 - 使用全部样本的梯度）
-        w = w - lr * dw
-        b = b - lr * db
-        
-        # 打印训练进度
-        if (epoch + 1) % 50 == 0:
-            print(f"Epoch {epoch + 1}/{epochs}, MSE: {mse:.6f}")
     
     return w, b, history_mse_list
 # ============================
@@ -95,20 +103,20 @@ def main():
     X_train, y_train, X_test, y_test = train_test_split(X, y, test_ratio=0.2)
     X_train, X_test = normalize(X_train, X_test)
 
-    print('[Template] Implement gd_train(X_train, y_train) returning w, b, history.')
+    print('[Training] Starting gradient descent training...')
 
-    # 如已实现，可取消注释进行训练与作图
-    w, b, hist = gd_train(X_train, y_train, lr=0.05, epochs=300)
-    #
-    # # 评估
+    # 训练模型 (可以调整batch_size: None=BGD, 1=SGD, 其他值=Mini-batch GD)
+    w, b, hist = gd_train(X_train, y_train, lr=0.05, epochs=300, batch_size=None)
+
+    # 评估
     y_train_pred = X_train @ w + b
     y_test_pred = X_test @ w + b
     train_mse = float(np.mean((y_train - y_train_pred) ** 2))
     test_mse = float(np.mean((y_test - y_test_pred) ** 2))
     print(f'Train MSE: {train_mse:.4f}')
     print(f'Test MSE:  {test_mse:.4f}')
-    #
-    # # 收敛曲线
+
+    # 收敛曲线
     plt.figure(figsize=(6, 4))
     plt.plot(range(1, len(hist) + 1), hist, label='Train MSE')
     plt.xlabel('Epoch')

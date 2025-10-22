@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-模板（不依赖第三方ML库）：任务3 学习率曲线（基于手写GD）
-- 目的：让学生实现线性回归的梯度下降训练函数，并比较不同学习率下的收敛曲线
+模板（不依赖第三方ML库）：任务2 梯度下降（BGD/SGD）
+- 目的：给学生手写实现线性回归的梯度下降训练（任选 BGD 或 SGD）
 - 本模板仅保留数据读取、划分与可视化骨架；算法实现留白
 - 允许使用 numpy / pandas / matplotlib，禁止使用 sklearn
 """
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 OUT_DIR = os.path.join(os.path.dirname(__file__), 'outputs')
 CSV = os.path.join(DATA_DIR, 'winequality-white.csv')
-FIG_PATH = os.path.join(OUT_DIR, 'task3_lr_curves_template.png')
+FIG_PATH = os.path.join(OUT_DIR, 'task2_mse_curve_template.png')
 
 np.random.seed(42)
 
@@ -30,14 +30,8 @@ def normalize(X_train: np.ndarray, X_test: np.ndarray):
     std = X_train.std(axis=0) + 1e-8
     return (X_train - mean) / std, (X_test - mean) / std
 
-
-def mse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    return float(np.mean((y_true - y_pred) ** 2))
-
 # ============================
-# TODO: 算法实现区域（学生填写）
-# 目标：实现梯度下降训练线性回归，返回 (w, b, hist)
-# 建议：BGD 每轮使用全部样本；可扩展为小批量 SGD
+# 批量梯度下降（BGD）算法实现
 def gd_train(X: np.ndarray, y: np.ndarray, lr=0.01, epochs=200):
     """
     批量梯度下降训练线性回归模型
@@ -61,26 +55,25 @@ def gd_train(X: np.ndarray, y: np.ndarray, lr=0.01, epochs=200):
     
     history_mse_list = []
     
-    print(f"开始批量梯度下降训练，样本数：{n_samples}，特征数：{n_features}")
+    print(f"开始训练，样本数：{n_samples}，特征数：{n_features}")
     print(f"学习率：{lr}，训练轮数：{epochs}")
     
     for epoch in range(epochs):
-        # 前向传播：计算所有样本的预测值
+        # 前向传播：计算预测值
         y_pred = X @ w + b
         
         # 计算损失（均方误差）
         mse = np.mean((y - y_pred) ** 2)
         history_mse_list.append(mse)
         
-        # 计算梯度（基于全部样本）
+        # 计算梯度
+        # 对权重w的梯度：∂L/∂w = (2/n) * X^T * (y_pred - y)
+        # 对偏置b的梯度：∂L/∂b = (2/n) * sum(y_pred - y)
         error = y_pred - y
-        
-        # 对权重w的梯度：∂L/∂w = (2/n) * X^T * error
-        # 对偏置b的梯度：∂L/∂b = (2/n) * sum(error)
         dw = (2.0 / n_samples) * X.T @ error
         db = (2.0 / n_samples) * np.sum(error)
         
-        # 更新参数（批量梯度下降 - 使用全部样本的梯度）
+        # 更新参数（批量梯度下降）
         w = w - lr * dw
         b = b - lr * db
         
@@ -101,30 +94,30 @@ def main():
     X_train, y_train, X_test, y_test = train_test_split(X, y, test_ratio=0.2)
     X_train, X_test = normalize(X_train, X_test)
 
-    print('[Template] Implement gd_train(X_train, y_train) to compare learning rates.')
+    print('[Template] Implement gd_train(X_train, y_train) returning w, b, history.')
 
-    # 如已实现，可取消注释进行多学习率对比与作图
-    lrs = [0.001, 0.01, 0.05, 0.1]
-    curves = {}
-    epochs = 300
-    for lr in lrs:
-        w, b, hist = gd_train(X_train, y_train, lr=lr, epochs=epochs)
-        train_m = mse(y_train, X_train @ w + b)
-        test_m = mse(y_test, X_test @ w + b)
-        curves[lr] = {'hist': hist, 'train_mse': train_m, 'test_mse': test_m}
-        print(f'lr={lr:.3f} -> Train MSE={train_m:.4f}, Test MSE={test_m:.4f}')
+    # 如已实现，可取消注释进行训练与作图
+    # w, b, hist = gd_train(X_train, y_train, lr=0.05, epochs=300)
     #
-    plt.figure(figsize=(7, 5))
-    for lr, info in curves.items():
-        plt.plot(range(1, len(info['hist']) + 1), info['hist'], label=f'lr={lr}')
-    plt.xlabel('Epoch')
-    plt.ylabel('Train MSE')
-    plt.title('MSE convergence under different learning rates')
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(FIG_PATH, dpi=150)
-    plt.close()
-    print('Saved figure:', FIG_PATH)
+    # # 评估
+    # y_train_pred = X_train @ w + b
+    # y_test_pred = X_test @ w + b
+    # train_mse = float(np.mean((y_train - y_train_pred) ** 2))
+    # test_mse = float(np.mean((y_test - y_test_pred) ** 2))
+    # print(f'Train MSE: {train_mse:.4f}')
+    # print(f'Test MSE:  {test_mse:.4f}')
+    #
+    # # 收敛曲线
+    # plt.figure(figsize=(6, 4))
+    # plt.plot(range(1, len(hist) + 1), hist, label='Train MSE')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('MSE')
+    # plt.title('GD convergence curve')
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.savefig(FIG_PATH, dpi=150)
+    # plt.close()
+    # print('Saved figure:', FIG_PATH)
 
 
 if __name__ == '__main__':

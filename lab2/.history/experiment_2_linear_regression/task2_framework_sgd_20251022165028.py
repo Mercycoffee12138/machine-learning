@@ -31,56 +31,80 @@ def normalize(X_train: np.ndarray, X_test: np.ndarray):
     return (X_train - mean) / std, (X_test - mean) / std
 
 # ============================
-# 批量梯度下降（BGD）算法实现
-def gd_train(X: np.ndarray, y: np.ndarray, lr=0.01, epochs=200):
+# TODO: 算法实现区域（学生填写）
+# 目标：实现 BGD 或 SGD 训练线性回归，返回 (w, b, hist)
+# 建议：BGD 每轮使用全部样本；SGD 可每次采样一个或小批量样本
+
+def gd_train(X: np.ndarray, y: np.ndarray, lr=0.01, epochs=200, method='SGD', batch_size=32):
     """
-    批量梯度下降训练线性回归模型
+    梯度下降训练线性回归模型
     
-    参数:
+    Args:
         X: 特征矩阵，形状为 (n_samples, n_features)
         y: 目标值，形状为 (n_samples,)
         lr: 学习率
         epochs: 训练轮数
+        method: 'BGD' (批量梯度下降) 或 'SGD' (随机梯度下降)
+        batch_size: SGD 的批量大小
     
-    返回:
+    Returns:
         w: 权重向量，形状为 (n_features,)
         b: 偏置项
-        history_mse_list: 每轮训练后的MSE历史记录
+        history_mse_list: 每轮的 MSE 历史记录
     """
     n_samples, n_features = X.shape
     
     # 初始化参数
-    w = np.random.normal(0, 0.01, n_features)  # 权重初始化为小的随机值
-    b = 0.0  # 偏置初始化为0
+    w = np.random.normal(0, 0.01, n_features)
+    b = 0.0
     
     history_mse_list = []
     
-    print(f"开始批量梯度下降训练，样本数：{n_samples}，特征数：{n_features}")
-    print(f"学习率：{lr}，训练轮数：{epochs}")
-    
     for epoch in range(epochs):
-        # 前向传播：计算所有样本的预测值
-        y_pred = X @ w + b
+        if method == 'BGD':
+            # 批量梯度下降：使用全部样本
+            y_pred = X @ w + b
+            error = y_pred - y
+            
+            # 计算梯度
+            dw = (1/n_samples) * X.T @ error
+            db = (1/n_samples) * np.sum(error)
+            
+            # 更新参数
+            w -= lr * dw
+            b -= lr * db
+            
+        elif method == 'SGD':
+            # 随机梯度下降：使用小批量样本
+            # 随机打乱数据
+            indices = np.random.permutation(n_samples)
+            
+            for i in range(0, n_samples, batch_size):
+                # 获取当前批量的索引
+                batch_indices = indices[i:i+batch_size]
+                X_batch = X[batch_indices]
+                y_batch = y[batch_indices]
+                
+                # 前向传播
+                y_pred_batch = X_batch @ w + b
+                error_batch = y_pred_batch - y_batch
+                
+                # 计算梯度
+                dw = (1/len(batch_indices)) * X_batch.T @ error_batch
+                db = (1/len(batch_indices)) * np.sum(error_batch)
+                
+                # 更新参数
+                w -= lr * dw
+                b -= lr * db
         
-        # 计算损失（均方误差）
-        mse = np.mean((y - y_pred) ** 2)
+        # 计算当前轮次的 MSE（在整个训练集上）
+        y_pred_full = X @ w + b
+        mse = np.mean((y - y_pred_full) ** 2)
         history_mse_list.append(mse)
         
-        # 计算梯度（基于全部样本）
-        error = y_pred - y
-        
-        # 对权重w的梯度：∂L/∂w = (2/n) * X^T * error
-        # 对偏置b的梯度：∂L/∂b = (2/n) * sum(error)
-        dw = (2.0 / n_samples) * X.T @ error
-        db = (2.0 / n_samples) * np.sum(error)
-        
-        # 更新参数（批量梯度下降 - 使用全部样本的梯度）
-        w = w - lr * dw
-        b = b - lr * db
-        
-        # 打印训练进度
+        # 可选：打印进度
         if (epoch + 1) % 50 == 0:
-            print(f"Epoch {epoch + 1}/{epochs}, MSE: {mse:.6f}")
+            print(f'Epoch {epoch + 1}/{epochs}, MSE: {mse:.6f}')
     
     return w, b, history_mse_list
 # ============================
@@ -97,24 +121,26 @@ def main():
 
     print('[Template] Implement gd_train(X_train, y_train) returning w, b, history.')
 
-    # 如已实现，可取消注释进行训练与作图
-    w, b, hist = gd_train(X_train, y_train, lr=0.05, epochs=300)
-    #
-    # # 评估
+    # 训练模型
+    print("开始训练模型...")
+    w, b, hist = gd_train(X_train, y_train, lr=0.05, epochs=300, method='SGD', batch_size=32)
+
+    # 评估
     y_train_pred = X_train @ w + b
     y_test_pred = X_test @ w + b
     train_mse = float(np.mean((y_train - y_train_pred) ** 2))
     test_mse = float(np.mean((y_test - y_test_pred) ** 2))
     print(f'Train MSE: {train_mse:.4f}')
     print(f'Test MSE:  {test_mse:.4f}')
-    #
-    # # 收敛曲线
-    plt.figure(figsize=(6, 4))
-    plt.plot(range(1, len(hist) + 1), hist, label='Train MSE')
+
+    # 收敛曲线
+    plt.figure(figsize=(8, 6))
+    plt.plot(range(1, len(hist) + 1), hist, label='Train MSE', linewidth=2)
     plt.xlabel('Epoch')
     plt.ylabel('MSE')
-    plt.title('GD convergence curve')
+    plt.title('SGD Convergence Curve')
     plt.legend()
+    plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.savefig(FIG_PATH, dpi=150)
     plt.close()
